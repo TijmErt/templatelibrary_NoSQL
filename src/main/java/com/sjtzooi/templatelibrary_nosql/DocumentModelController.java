@@ -2,6 +2,8 @@ package com.sjtzooi.templatelibrary_nosql;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,14 +32,17 @@ public class DocumentModelController {
             return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
         }
     }
-
     @GetMapping("/get/{fileKey}")
-    public ResponseEntity getDocumentModel(@PathVariable("fileKey") String fileKey) throws IOException {
+    public ResponseEntity getFile(@PathVariable("fileKey") String fileKey) throws IOException {
         DocumentModel model = documentModelService.getDocumentModel(fileKey);
         if (model == null) {
             return ResponseEntity.badRequest().body("No document model found with the given file key.");
         }
-        return ResponseEntity.ok(model);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + model.getFileName()+ "\"")
+                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(model.getFileSize()))
+                .body(model.getFileData());
     }
 
 }

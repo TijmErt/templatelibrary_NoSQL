@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -46,9 +47,13 @@ public class DocumentModelService {
         documentModel.setUploadDate(LocalDate.parse(metadata.get("uploadDate").toString()));
         documentModel.setFileName(operations.getResource(file).getFilename());
         documentModel.setContentType(operations.getResource(file).getContentType());
-        documentModel.setFileData(operations.getResource(file).getInputStream().readAllBytes());
-
+        documentModel.setFileData( new InputStreamResource(operations.getResource(file).getInputStream()));
         documentModel.setFileKey(id);
         return documentModel;
+    }
+    public InputStreamResource getFile(String id) throws IOException {
+        GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
+        InputStreamResource stream = new InputStreamResource(operations.getResource(file).getInputStream());
+        return stream;
     }
 }

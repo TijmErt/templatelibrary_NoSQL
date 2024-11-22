@@ -1,6 +1,7 @@
 package com.sjtzooi.templatelibrary_nosql;
 
 import lombok.Data;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,6 @@ public class DocumentModel {
     private LocalDate uploadDate;
 
     private long fileSize;
-    private byte[] fileData;
+    private InputStreamResource fileData;
 
 }
