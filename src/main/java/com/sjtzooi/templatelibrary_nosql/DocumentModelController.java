@@ -16,8 +16,13 @@ import java.io.IOException;
 @RequestMapping("/api/DocumentModelController")
 public class DocumentModelController {
 
+
+    private DocumentModelService documentModelService;
+
     @Autowired
-    DocumentModelService documentModelService;
+    public DocumentModelController(DocumentModelService documentModelService) {
+        this.documentModelService = documentModelService;
+    }
 
     @PostMapping("/add")
     public ResponseEntity<String> AddDocumentModel(@RequestParam("file") MultipartFile file) {
@@ -29,20 +34,27 @@ public class DocumentModelController {
             String fileKey = documentModelService.addDocumentModel(file);
             return ResponseEntity.ok(fileKey);
         } catch (IOException e) {
+            log.debug(e.getMessage());
             return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
         }
     }
     @GetMapping("/get/{fileKey}")
     public ResponseEntity getFile(@PathVariable("fileKey") String fileKey) throws IOException {
-        DocumentModel model = documentModelService.getDocumentModel(fileKey);
-        if (model == null) {
-            return ResponseEntity.badRequest().body("No document model found with the given file key.");
+        try {
+            DocumentModel model = documentModelService.getDocumentModel(fileKey);
+            if (model == null) {
+                return ResponseEntity.badRequest().body("No document model found with the given file key.");
+            }
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + model.getFileName()+ "\"")
+                    .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(model.getFileSize()))
+                    .body(model.getFileData());
         }
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + model.getFileName()+ "\"")
-                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
-                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(model.getFileSize()))
-                .body(model.getFileData());
+        catch (Exception e) {
+            log.debug(e.getMessage());
+            return ResponseEntity.status(500).body("Error downloading the file: " + e.getMessage());
+        }
     }
 
 }

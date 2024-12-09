@@ -22,38 +22,62 @@ import java.time.LocalDate;
 @Slf4j
 @Service
 public class DocumentModelService {
-    @Autowired
+
     private GridFsTemplate gridFsTemplate;
 
-    @Autowired
     private GridFsOperations operations;
 
-    public String addDocumentModel(MultipartFile file) throws IOException {
-        DBObject metaData = new BasicDBObject();
-        metaData.put("fileSize", file.getSize());
-        metaData.put("uploadDate", LocalDate.now().toString());
+    @Autowired
+    public DocumentModelService(GridFsTemplate gridFsTemplate, GridFsOperations operations) {
+        this.gridFsTemplate = gridFsTemplate;
+        this.operations = operations;
+    }
 
-        ObjectId id = gridFsTemplate.store(
-                file.getInputStream(), file.getName(), file.getContentType(), metaData);
-        log.info(id.toString());
-        return id.toString();
+    public String addDocumentModel(MultipartFile file) throws IOException {
+        try{
+            DBObject metaData = new BasicDBObject();
+            metaData.put("fileSize", file.getSize());
+            metaData.put("uploadDate", LocalDate.now().toString());
+
+            ObjectId id = gridFsTemplate.store(
+                    file.getInputStream(), file.getName(), file.getContentType(), metaData);
+            log.info(id.toString());
+            return id.toString();
+        }
+        catch(Exception e){
+         log.debug(e.getMessage());
+         throw e;
+        }
     }
 
     public DocumentModel getDocumentModel(String id) throws IOException {
-        GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
-        DocumentModel documentModel = new DocumentModel();
-        Document metadata = file.getMetadata();
-        documentModel.setFileSize(Long.parseLong(metadata.get("fileSize").toString()));
-        documentModel.setUploadDate(LocalDate.parse(metadata.get("uploadDate").toString()));
-        documentModel.setFileName(operations.getResource(file).getFilename());
-        documentModel.setContentType(operations.getResource(file).getContentType());
-        documentModel.setFileData( new InputStreamResource(operations.getResource(file).getInputStream()));
-        documentModel.setFileKey(id);
-        return documentModel;
+        try{
+            GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
+            DocumentModel documentModel = new DocumentModel();
+            Document metadata = file.getMetadata();
+            documentModel.setFileSize(Long.parseLong(metadata.get("fileSize").toString()));
+            documentModel.setUploadDate(LocalDate.parse(metadata.get("uploadDate").toString()));
+            documentModel.setFileName(operations.getResource(file).getFilename());
+            documentModel.setContentType(operations.getResource(file).getContentType());
+            documentModel.setFileData( new InputStreamResource(operations.getResource(file).getInputStream()));
+            documentModel.setFileKey(id);
+            return documentModel;
+        }
+        catch(Exception e){
+            log.debug(e.getMessage());
+            throw e;
+        }
+
     }
     public InputStreamResource getFile(String id) throws IOException {
-        GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
-        InputStreamResource stream = new InputStreamResource(operations.getResource(file).getInputStream());
-        return stream;
+        try{
+            GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
+            InputStreamResource stream = new InputStreamResource(operations.getResource(file).getInputStream());
+            return stream;
+        }
+        catch(Exception e){
+            log.debug(e.getMessage());
+            throw e;
+        }
     }
 }
