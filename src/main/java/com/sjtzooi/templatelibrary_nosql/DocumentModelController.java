@@ -26,15 +26,15 @@ public class DocumentModelController {
 
     @PostMapping("/add")
     public ResponseEntity<String> AddDocumentModel(@RequestParam("file") MultipartFile file) {
-        if(file.isEmpty()) {
-            log.error("File is empty");
-            return ResponseEntity.badRequest().body("File is empty");
-        }
         try {
+            if(file.isEmpty()) {
+                log.error("File is empty");
+                return ResponseEntity.badRequest().body("File is empty");
+            }
             String fileKey = documentModelService.addDocumentModel(file);
             return ResponseEntity.ok(fileKey);
         } catch (IOException e) {
-            log.debug(e.getMessage());
+            log.error(e.getMessage());
             return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
         }
     }

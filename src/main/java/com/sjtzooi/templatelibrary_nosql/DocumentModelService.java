@@ -23,6 +23,7 @@ import java.time.LocalDate;
 @Service
 public class DocumentModelService {
 
+    private static final String ERROR_MESSAGE_SERVICE_LAYER= "DocumentModelService:";
     private GridFsTemplate gridFsTemplate;
 
     private GridFsOperations operations;
@@ -45,7 +46,7 @@ public class DocumentModelService {
             return id.toString();
         }
         catch(Exception e){
-         log.debug(e.getMessage());
+         log.error(ERROR_MESSAGE_SERVICE_LAYER+" addDocumentModel: {} ",e.getMessage());
          throw e;
         }
     }
@@ -64,20 +65,9 @@ public class DocumentModelService {
             return documentModel;
         }
         catch(Exception e){
-            log.debug(e.getMessage());
+            log.error(ERROR_MESSAGE_SERVICE_LAYER +" getDocumentModel: {} ", e.getMessage());
             throw e;
         }
 
-    }
-    public InputStreamResource getFile(String id) throws IOException {
-        try{
-            GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
-            InputStreamResource stream = new InputStreamResource(operations.getResource(file).getInputStream());
-            return stream;
-        }
-        catch(Exception e){
-            log.debug(e.getMessage());
-            throw e;
-        }
     }
 }
