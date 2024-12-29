@@ -1,6 +1,7 @@
 package com.sjtzooi.templatelibrary_nosql;
 
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -39,17 +40,19 @@ public class DocumentModelController {
         }
     }
     @GetMapping("/get/{fileKey}")
-    public ResponseEntity getFile(@PathVariable("fileKey") String fileKey) throws IOException {
+    public ResponseEntity<?> getFileData(@PathVariable("fileKey") String fileKey) throws IOException {
         try {
-            DocumentModel model = documentModelService.getDocumentModel(fileKey);
+            DocumentModel model = documentModelService.getUncompressedDocumentModel(new ObjectId(fileKey));
             if (model == null) {
                 return ResponseEntity.badRequest().body("No document model found with the given file key.");
             }
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + model.getFileName()+ "\"")
-                    .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                    .header(HttpHeaders.CONTENT_TYPE, model.getContentType() != null && !model.getContentType().isEmpty()
+                            ? model.getContentType()
+                            : "application/octet-stream")
                     .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(model.getFileSize()))
-                    .body(model.getFileData());
+                    .body(model.getFileStream());
         }
         catch (Exception e) {
             log.debug(e.getMessage());
@@ -57,4 +60,18 @@ public class DocumentModelController {
         }
     }
 
+    @GetMapping("/get/{fileKey}/compressed")
+    public ResponseEntity<?> getCompressedDocument(@PathVariable("fileKey") String fileKey) throws IOException {
+        ObjectId id = new ObjectId(fileKey);
+        DocumentModel model = documentModelService.getCompressedDocumentModel(id);
+
+        // Return the compressed file with the correct headers
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + model.getFileName()+ "\"")
+                .header(HttpHeaders.CONTENT_TYPE, model.getContentType() != null && !model.getContentType().isEmpty()
+                        ? model.getContentType()
+                        : "application/octet-stream")
+                .header(HttpHeaders.CONTENT_ENCODING, "gzip")  // Indicating that the content is compressed with gzip
+                .body(model.getFileStream());  // The compressed content as InputStreamResource
+    }
 }
