@@ -74,4 +74,21 @@ public class DocumentModelController {
                 .header(HttpHeaders.CONTENT_ENCODING, "gzip")  // Indicating that the content is compressed with gzip
                 .body(model.getFileStream());  // The compressed content as InputStreamResource
     }
+    @GetMapping("/get/{fileKey}/pdf")
+    public ResponseEntity<?> getFileDataPDF(@PathVariable("fileKey") String fileKey) throws IOException {
+        try {
+            DocumentModel model = documentModelService.getPDFDocumentModel(new ObjectId(fileKey));
+            if (model == null) {
+                return ResponseEntity.badRequest().body("No document model found with the given file key.");
+            }
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(model.getFileSize()))
+                    .body(model.getFileStream());
+        }
+        catch (Exception e) {
+            log.debug(e.getMessage());
+            return ResponseEntity.status(500).body("Error downloading the file: " + e.getMessage());
+        }
+    }
 }

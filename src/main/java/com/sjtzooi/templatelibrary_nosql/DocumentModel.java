@@ -17,7 +17,7 @@ public class DocumentModel {
     private String contentType;
     private LocalDate uploadDate;
 
-    private long fileSize;
+    private Long fileSize;
     private InputStreamResource fileStream;
 
 }

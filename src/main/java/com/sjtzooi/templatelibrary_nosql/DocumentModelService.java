@@ -3,8 +3,11 @@ package com.sjtzooi.templatelibrary_nosql;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fop.apps.FOPException;
 import org.bson.types.ObjectId;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -28,10 +31,13 @@ public class DocumentModelService {
 
     private GridFsOperations operations;
 
+    private DocxToPdfService docxToPdfService;
+
     @Autowired
-    public DocumentModelService(GridFsTemplate gridFsTemplate, GridFsOperations operations) {
+    public DocumentModelService(GridFsTemplate gridFsTemplate, GridFsOperations operations, DocxToPdfService docxToPdfService) {
         this.gridFsTemplate = gridFsTemplate;
         this.operations = operations;
+        this.docxToPdfService =docxToPdfService;
     }
 
     public String addDocumentModel(MultipartFile file) throws IOException {
@@ -68,6 +74,25 @@ public class DocumentModelService {
             return documentModel;
         } catch (IOException e) {
             log.error(ERROR_MESSAGE_SERVICE_LAYER +" getCompressedDocumentModel: {}", e.getMessage());
+            throw e;
+        }
+    }
+    public DocumentModel getPDFDocumentModel(ObjectId id) throws IOException, FOPException, Docx4JException, JAXBException {
+        try {
+            DocumentModel documentModel = getDocumentModel(id);
+            if("application/pdf".equals(documentModel.getContentType())) return documentModel;
+            InputStream compressedInputStream = docxToPdfService.convertDocxToPdf(documentModel.getFileStream().getInputStream());
+            byte[] pdfBytes = compressedInputStream.readAllBytes(); // Fully read into memory
+            log.info("PDF byte array size: " + pdfBytes.length);
+
+            documentModel.setFileSize( Long.valueOf(pdfBytes.length));
+
+            // Ensure stream is reusable
+            compressedInputStream = new ByteArrayInputStream(pdfBytes);
+            documentModel.setFileStream(new InputStreamResource(compressedInputStream));
+            return documentModel;
+        } catch (IOException | Docx4JException | FOPException | JAXBException e) {
+            log.error(ERROR_MESSAGE_SERVICE_LAYER +" getPDFDocumentModel: {}", e.getMessage());
             throw e;
         }
     }
