@@ -41,7 +41,7 @@ public class FileUploadOnStartup {
             log.info("Starting file upload");
 
             date = LocalDate.now();
-
+            EmptyMonoDB();
             String idPDF = intilizatePDF("5fbc1c8475fd2f2ba84e6c2d");
             String idDOCX = intilizateDOCX("1f3f1e4ba6aa4c509c0ce162");
 
@@ -52,6 +52,10 @@ public class FileUploadOnStartup {
         }
 
     }
+    private void EmptyMonoDB(){
+        gridFsTemplate.delete(new Query());
+    }
+
     private String intilizatePDF(String hexString){
         try{
             Document metaDataPDF = new Document();
