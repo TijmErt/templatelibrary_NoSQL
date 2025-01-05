@@ -38,6 +38,10 @@ public class FileUploadOnStartup {
     @PostConstruct
     public void run() throws Exception {
         try{
+            if ("true".equals(System.getenv("CI"))) {
+                log.info("Skipping file upload during CI/CD pipeline");
+                return;
+            }
             log.info("Starting file upload");
 
             date = LocalDate.now();
