@@ -20,6 +20,10 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+
+    - name: Set CI Environment Variable
+      run: echo "CI=true" >> $GITHUB_ENV
+      
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
