@@ -38,6 +38,15 @@ public class FileUploadOnStartup {
     @PostConstruct
     public void run() throws Exception {
         try{
+            /*
+            Note to self
+            possible change this feature as followed
+
+            .env:
+            allowInitialization       - so that people can decide whether they want initialized data
+            disableDatabaseEmptying   - so that people don't constantly drop their database data when rerunning the application
+
+            */
             if ("true".equals(System.getenv("CI"))) {
                 log.info("Skipping file upload during CI/CD pipeline");
                 return;
